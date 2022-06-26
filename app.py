@@ -21,7 +21,6 @@ class Todo(db.Model):
 @app.route("/", methods=["GET", "POST"])  # routeto display all todos
 def index():
     if request.method == "POST":
-        print("inside route")
         content = request.form["content"]
         task_content = Todo(content=content)  # create a new todo item
         try:
