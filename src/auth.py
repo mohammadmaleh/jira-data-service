@@ -1,13 +1,20 @@
 from flask import Blueprint, request, jsonify
 from src import bookmarks
 from src.constants.status import (
+    HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_409_CONFLICT,
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.database import Bookmark, User, db
 import validators
+
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+)
 
 auth = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
 
@@ -56,7 +63,6 @@ def register():
         )
     pwd_hash = generate_password_hash(password)
     user = User(username=username, email=email, password=pwd_hash)
-    print(user)
     db.session.add(user)
     db.session.commit()
 
@@ -72,6 +78,47 @@ def register():
             }
         ),
         HTTP_201_CREATED,
+    )
+
+
+@auth.post("/login")
+def login():
+    email = request.json.get("email", "")
+    password = request.json.get("password", "")
+    print(User.query.all())
+
+    if not email or not password:
+        return (
+            jsonify({"message": "Missing email or password"}),
+            HTTP_401_UNAUTHORIZED,
+        )
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return (
+            jsonify({"message": "User does not exist"}),
+            HTTP_401_UNAUTHORIZED,
+        )
+    if not check_password_hash(user.password, password):
+        return (
+            jsonify({"message": "Incorrect password"}),
+            HTTP_401_UNAUTHORIZED,
+        )
+    refresh_token = create_refresh_token(identity=user.id)
+    access_token = create_access_token(identity=user.id)
+    return (
+        jsonify(
+            {
+                "message": "User logged in successfully",
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
+                    "id": user.id,
+                    "refreshToken": refresh_token,
+                    "accessToken": access_token,
+                },
+            }
+        ),
+        HTTP_200_OK,
     )
 
 

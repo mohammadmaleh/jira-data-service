@@ -6,3 +6,4 @@ export SECRET_KEY=test
 export MAIL_SERVER=smtp.gmail.com
 export MAIL_PORT=587
 export MAIL_USE_TLS=1
+export JWT_SECRET_KEY='JWT_SECRET_KEY'
