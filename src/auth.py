@@ -14,6 +14,7 @@ import validators
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
+    jwt_required,
 )
 
 auth = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
@@ -123,5 +124,6 @@ def login():
 
 
 @auth.get("/me")
+@jwt_required()  # This decorator ensures that the user is logged in before they can access this endpoint
 def index():
     return "user me"
